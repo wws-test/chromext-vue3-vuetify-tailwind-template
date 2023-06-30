@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "chrome-extension-name",
+    "name": "trun-characters",
     "description": "chrome extension",
     "version": "0.0.1",
     "action": {

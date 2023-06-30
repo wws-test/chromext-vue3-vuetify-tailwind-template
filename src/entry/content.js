@@ -1,11 +1,11 @@
 console.log('hello world content todo something~')
 
 
-// Listens for messages from the popup
-// eslint-disable-next-line no-unused-vars
-chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
-    if (msg.action === 'log') {
-        console.log(msg.message);
+// 监听来自 popup 的消息
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === 'getURL') {
+      sendResponse({ url: window.location.href });
     }
-});
+  });
+  
 

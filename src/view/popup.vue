@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-card>
+    <v-card class="popup-container">
       <QuoteDisplay />
     </v-card>
   </v-app>
@@ -17,4 +17,5 @@ export default {
     QuoteDisplay
   },
 };
+
 </script>

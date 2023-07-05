@@ -20,22 +20,14 @@ export default {
   data() {
     return {
       quotes: [
-        "Quote 1",
-        "Quote 2",
-        "Quote 3",
-        "Quote 4",
-        "Quote 5",
-        "Quote 6",
-        "Quote 7",
-        "Quote 8",
-        "Quote 9",
-        "Quote 10",
-        "Quote 11",
-        "Quote 12",
-        "Quote 13",
-        "Quote 14",
-        "Quote 15",
-        "Quote 16"
+        "Admin",
+        "Useradmin",
+        "Opadmin",
+        "等保注册",
+        "重保单位",
+        "测评机构",
+        "三方单位",
+        "预留单位",
       ]
     };
   },

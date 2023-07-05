@@ -1,14 +1,16 @@
 {
     "manifest_version": 3,
-    "name": "trun-characters",
+    "name": "multiple_roles",
     "description": "chrome extension",
     "version": "0.0.1",
     "incognito":"split",
     "permissions": [
+        "storage",
+        "activeTab",
+        "scripting",
         "tabs",
         "nativeMessaging",
-        "chrome://favicon/",
-        "chrome://extension-icon/"
+        "windows"
       ],
     "action": {
         "default_popup": "popup.html"

@@ -33,10 +33,9 @@ app.mount('#app');
       const urlObject = new URL(currentUrl);
       const rootUrl = urlObject.protocol + '//' + urlObject.hostname;
       // 打开一个新的标签页，并传递当前标签页的 URL
-      chrome.windows.create({url: rootUrl, incognito: true }, function(window) {
-  
-        // chrome.tabs.create({ url: currentUrl, windowId: window.id });
-      });
+      chrome.runtime.sendMessage({ action: 'executeScript',rootUrl: rootUrl});
+      
     });
   }
   
+

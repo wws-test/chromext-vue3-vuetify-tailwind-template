@@ -10,7 +10,8 @@
         "scripting",
         "tabs",
         "nativeMessaging",
-        "windows"
+        "windows",
+        "debugger"
       ],
     "action": {
         "default_popup": "popup.html"

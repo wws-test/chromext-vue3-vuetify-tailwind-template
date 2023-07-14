@@ -11,119 +11,104 @@ function getActiveTab(tabs) {
     return null;
   }
 }
+/**
+ *打开新窗口并删除指定URL的cookie。 *
+ * @param {string} url - 应删除cookie的网站URL。
+ * @return {undefined} This function does not return a value.
+ */
 function openNewTabInIncognito(url) {
-  chrome.windows.create({ incognito: false, url: url }, function (wins) {
-  // 在创建隐身窗口后的回调函数中处理窗口信息
-  console.log(wins);
-});
-  chrome.windows.getAll({ populate: true,windowTypes: ['normal'] }, function (win) {
-    for (var i = 0; i < win.length; i++) {
-      var window = win[i];
-      if (window.incognito && window.type === 'normal') {
-        chrome.tabs.create({ url: url, windowId: window.id, active: false });
-        break;
+  chrome.windows.getCurrent(function (window) {
+    // 使用 chrome.cookies.getAll 获取当前网址下的所有 cookie
+    const urlObject = new URL(url);
+    chrome.cookies.getAll({ domain: urlObject.hostname }, function (cookies) {
+      console.log(cookies);
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i];
+        chrome.cookies.remove(
+          { url: "https://" + cookie.domain + cookie.path, name: cookie.name },
+          function (removedCookie) {
+            if (removedCookie) {
+              console.log("Cookie removed:", removedCookie);
+            } else {
+              console.log("Failed to remove cookie");
+            }
+          }
+        );
       }
-    }
-  });
-}
-
-// function openNewTabInIncognito(url) {
-//   chrome.windows.getAll({ populate: true,windowTypes: ['normal']}, function (win) {
-//     if (win.length > 0) {
-//       // 选择第一个隐身窗口
-//       const windowId = win[0].id;
-      
-//       // 在选定的隐身窗口中打开新的标签页
-//       chrome.tabs.create({ windowId: windowId, url: url }, function (tab) {
-//         console.log('New tab opened in incognito window');
-//       });
-//     } else {
-//       console.log('No incognito window found');
-//     }
-//   });
-// }
-async function executeAutomation(tabId) {
-  // 发送命令给无痕页面执行自动化操作
-  chrome.debugger.sendCommand({ tabId: tabId }, 'Runtime.evaluate', {
-    expression: `
-      // 输入账号和密码
-      document.querySelector('input[name="username"]').value = 'your-username';
-      document.querySelector('input[name="password"]').value = 'your-password';
-
-      // 点击登录按钮
-      document.querySelector('button[type="submit"]').click();
-
-      // 其他自动化操作...
-    `
-  });
-}
-
-async function handleMessage(msg, sender, sendResponse) {
-  if (msg.action === 'executeScript') {
-    // 创建无痕窗口
-    openNewTabInIncognito(msg.rootUrl);
-    // try {
-    //   // 获取打开的无痕窗口的windowid
-    //   chrome.debugger.attach({ tabId: windows.tabs[0].id }, '1.3', function () {
-    //     // 启用调试会话
-    //     chrome.debugger.enable({}, async function () {
-    //       // 执行自动化操作
-    //       await executeAutomation(window.tabs[0].id);
-
-    //       // 断开调试会话
-    //       chrome.debugger.detach({ tabId: window.tabs[0].id });
-    //     });
+      // 在移除完所有 cookie 后刷新页面
+      chrome.tabs.reload();
+    });
+    // chrome.cookies.getAll({ domain:"192.168.31.50" }, function(cookies) {
+    //   console.log(cookies);
+    //   // 遍历获取到的 cookie，并移除它们
+    //   cookies.forEach(function(cookie) {
+    //     chrome.cookies.remove({ url: cookie.url, name: cookie.name, storeId: cookie.storeId });
     //   });
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    // chrome.windows.create({ incognito: true, url: msg.rootUrl }, async function (window) {
 
+    //   // 创建普通窗口并打开指定链接
+    //   chrome.windows.create({ url:url });
     // });
+  });
+}
+
+function executeDOMOperation() {
+  // 在 background 脚本中发送消息给内容脚本
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    // 确保目标标签页已加载完成
+
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (tabs && tabs.length > 0) {
+        const targetTabId = tabs[0].id;
+        (async () => {
+          const response = await chrome.runtime.sendMessage({greeting: "hello"});
+          // do something with response here, not outside the function
+          console.log(response);
+        })();
+
+
+        // chrome.runtime.sendMessage({ action: 'testMessage' }, function(response) {
+        //   // 处理接收到的响应
+        //   // console.log(response);
+        // });
+      }
+    });
+    // chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+    //   if (tabId === tabs[0].id && changeInfo.status === "complete") {
+    //     // 发送消息给内容脚本
+    //     chrome.tabs.sendMessage(
+    //       tabs[0].id,
+    //       { action: "testMessage" },
+    //       function (response) {
+    //         // 处理接收到的响应
+    //         // console.log(response);
+    //       }
+    //     );
+    //   }
+    // });
+  });
+}
+async function handleMessage(msg, sender, sendResponse) {
+  if (msg.action === "executeScript") {
+    // 清除cookie
+    openNewTabInIncognito(msg.rootUrl);
+    try {
+      // 获取打开的无痕窗口的windowid
+      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.debugger.attach(
+          { tabId: tabs[0].id },
+          "1.3",
+          function () {
+            executeDOMOperation();
+            // executeAutomation(newWindow.tabs[0].id);
+            // 断开调试会话
+            // chrome.debugger.detach({ tabId: newWindow.tabs[0].id });
+          }
+        );
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
 chrome.runtime.onMessage.addListener(handleMessage);
-// async function handleMessage(msg, sender, sendResponse) {
-//   if (msg.action === 'log') {
-//     sendMessageToContentScript({ action: 'log', message: msg.message });
-//   } else if (msg.action === 'executeScript') {
-//     const rootUrl = msg.rootUrl;
-    
-//     openNewTabInIncognito(rootUrl);
-    
-//     // 执行您希望进行的其他自动化操作
-//     // ...
-//   }
-// }
-
-
-
-
-// async function handleMessage(msg, sender, sendResponse) {
-//   if (msg.action === "log") {
-//     sendMessageToContentScript({ action: "log", message: msg.message });
-//   } else if (msg.action === "executeScript") {
-//     const windowId = await createIncognitoWindow(msg.rootUrl);
-//     chrome.tabs.executeScript(
-//       windowId,
-//       {
-//         code: `
-//               // 输入账号和密码
-//               document.querySelector('input[name="username"]').value = 'your-username';
-//               document.querySelector('input[name="password"]').value = 'your-password';
-
-//               // 点击登录按钮
-//               document.querySelector('button[type="submit"]').click();
-
-//               // 其他自动化操作...
-//             `,
-//       },
-//       function () {
-//         // I am in call back
-//         console.log("Injected some jquery ");
-//       }
-//     );
-//   }
-// }
-

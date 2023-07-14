@@ -11,7 +11,8 @@
         "tabs",
         "nativeMessaging",
         "windows",
-        "debugger"
+        "debugger",
+        "cookies"
       ],
     "action": {
         "default_popup": "popup.html"
@@ -20,7 +21,8 @@
         "service_worker": "background.js"
     },
     "host_permissions": [
-        "https://www.baidu.com/*"
+        "http://*/*",
+        "https://*/*"
     ],
     "content_scripts": [
         {
@@ -28,7 +30,7 @@
                 "<all_urls>"
             ],
             "js": [
-                "/content.js"
+                "content.js"
             ]
         }
     ]

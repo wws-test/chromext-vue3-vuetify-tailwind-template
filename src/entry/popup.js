@@ -26,14 +26,14 @@ app.config.globalProperties.$log = function (message) {
 app.mount('#app');
 
 
-  export function handleClick1() {
+  export function handleClick1(value) {
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       const currentTab = tabs[0];
       const currentUrl=tabs[0].url;
       const urlObject = new URL(currentUrl);
       const rootUrl = urlObject.protocol + '//' + urlObject.hostname;
       // 打开一个新的标签页，并传递当前标签页的 URL
-      chrome.runtime.sendMessage({ action: 'executeScript',rootUrl: rootUrl});
+      chrome.runtime.sendMessage({ action: 'executeScript',rootUrl: rootUrl,quote: value});
       
     });
   }

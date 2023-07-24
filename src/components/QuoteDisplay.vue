@@ -2,12 +2,12 @@
   <div class="bg-gradient-to-r from-[#0d9488] to-[#14b8a6] p-4 ">
     <div class="grid">
       <button
-        v-for="(quote, index) in quotes"
-        :key="index"
+        v-for="(value, key) in quotes"
+        :key="key"
         class="grid-item"
-        @click="handleClick"
+        @click="handleClick(key)"
       >
-        {{ quote }}
+        {{ key }}
       </button>
     </div>
   </div>
@@ -19,22 +19,22 @@ import { handleClick1 } from '@/entry/popup.js';
 export default {
   data() {
     return {
-      quotes: [
-        "Admin",
-        "Useradmin",
-        "Opadmin",
-        "等保注册",
-        "重保单位",
-        "测评机构",
-        "三方单位",
-        "预留单位",
-      ]
+      quotes: {
+        "Admin": 'admin',
+        "Useradmin": 'useradmin',
+        "单位管理": 'unitadmin',
+        "单位用户": 'unituser',
+        "系统管理": "aadmin",
+        "等保用户": 'dbuser',
+        "隐身窗口": "hiding",
+      }
     };
   },
 
   methods: {
-    handleClick() {
-      handleClick1();
+    handleClick(quote) {
+      const value = this.quotes[quote];
+      handleClick1(value);
     }
   }
 };

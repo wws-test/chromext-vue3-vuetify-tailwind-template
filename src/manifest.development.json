@@ -12,7 +12,9 @@
         "nativeMessaging",
         "windows",
         "debugger",
-        "cookies"
+        "cookies",
+        "webRequest",
+        "declarativeNetRequest"
       ],
     "action": {
         "default_popup": "popup.html"
@@ -33,5 +35,21 @@
                 "content.js"
             ]
         }
-    ]
+    ],
+    "declarative_net_request": {
+        "rule_resources": [
+          {
+            "id": "block_rule",
+            "enabled": true,
+            "rule": {
+              "action": {
+                "type": "allow"
+              },
+              "condition": {
+                "urlFilter": ".*"
+              }
+            }
+          }
+        ]
+      }
 }

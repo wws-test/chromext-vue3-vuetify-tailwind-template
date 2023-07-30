@@ -2,7 +2,16 @@
 console.log("hello world background todo something~");
 
 // background.js
+const requestPaths = [];
 
+chrome.webRequest.onCompleted.addListener(
+  (details) => {
+    const url = new URL(details.url);
+    const path = url.pathname;
+    requestPaths.push(path);
+  },
+  { urls: ["<all_urls>"] }
+);
 function getActiveTab(tabs) {
   if (tabs.length > 0) {
     return tabs[0];
@@ -16,7 +25,7 @@ function getActiveTab(tabs) {
  * @param {string} url - 应删除cookie的网站URL。
  * @return {undefined} This function does not return a value.
  */
-function openNewTabInIncognito(url,value) {
+function openNewTabInIncognito(url, value) {
   const urlObject = new URL(url);
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var tab = tabs[0];
@@ -51,33 +60,15 @@ function executeDOMOperation() {
   });
 }
 
-// function executeDOMOperation() {
-//   // 在 background 脚本中发送消息给内容脚本
-//   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-//     // 确保目标标签页已加载完成
-
-//     chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-//       if (tabId === tabs[0].id && changeInfo.status === "complete") {
-//         // 发送消息给内容脚本
-//         chrome.tabs.sendMessage(tabs[0].id, {action: 'executeDOMOperation'},
-//           (response) => {
-//             // console.log(response);
-//           }
-//         );
-//         console.log("发送消息给内容脚本");
-//       }
-//     });
-//   });
-// }
 async function handleBackgroundMessage(msg, sender, sendResponse) {
   console.log("handleBackgroundMessage");
   if (msg.action === "executeScript") {
     console.log("handleBackgroundMessage收到了执行脚本的消息");
     // 清除cookie
-    openNewTabInIncognito(msg.rootUrl,msg.quote);
+    openNewTabInIncognito(msg.rootUrl, msg.quote);
     try {
       // 获取当前窗口的windowid
-      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.debugger.attach(
           { tabId: tabs[0].id },
           "1.3",
@@ -85,7 +76,7 @@ async function handleBackgroundMessage(msg, sender, sendResponse) {
             console.log("开始执行executeDOMOperation函数");
             // executeDOMOperation();
             // 断开调试会话
-             chrome.debugger.detach({ tabId: tabs[0].id });
+            chrome.debugger.detach({ tabId: tabs[0].id });
           }
         );
       });

@@ -1,17 +1,7 @@
 /* eslint-disable */
 console.log("hello world background todo something~");
 
-// background.js
-const requestPaths = [];
 
-chrome.webRequest.onCompleted.addListener(
-  (details) => {
-    const url = new URL(details.url);
-    const path = url.pathname;
-    requestPaths.push(path);
-  },
-  { urls: ["<all_urls>"] }
-);
 function getActiveTab(tabs) {
   if (tabs.length > 0) {
     return tabs[0];

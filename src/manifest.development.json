@@ -4,6 +4,7 @@
     "description": "chrome extension",
     "version": "0.0.1",
     "incognito":"split",
+    "devtools_page": "devtools.html",
     "permissions": [
         "storage",
         "activeTab",
@@ -14,7 +15,8 @@
         "debugger",
         "cookies",
         "webRequest",
-        "declarativeNetRequest"
+        "declarativeNetRequest", 
+        "declarativeNetRequestWithHostAccess"
       ],
     "action": {
         "default_popup": "popup.html"
@@ -35,21 +37,5 @@
                 "content.js"
             ]
         }
-    ],
-    "declarative_net_request": {
-        "rule_resources": [
-          {
-            "id": "block_rule",
-            "enabled": true,
-            "rule": {
-              "action": {
-                "type": "allow"
-              },
-              "condition": {
-                "urlFilter": ".*"
-              }
-            }
-          }
-        ]
-      }
+    ]
 }

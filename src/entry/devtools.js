@@ -1,7 +1,6 @@
 /* eslint-disable */
    // 引入 highlight.js
    import hljs from 'highlight.js';
-
    // 引入 highlight.js 的样式文件
    import 'highlight.js/styles/default.css';
 chrome.devtools.panels.create("Network Paths", "path/to/panel-icon.png", "my-devtools.html", function(panel) {
@@ -23,18 +22,33 @@ chrome.devtools.panels.create("Network Paths", "path/to/panel-icon.png", "my-dev
           const pathWithoutHostAndQuery = requestPath.replace(/^.*\/\/[^\/]+/, '').split('?')[0];
   
           const isFile = /\.[a-zA-Z]+$/.test(pathWithoutHostAndQuery);
-          if (!isFile) {
+          const startsWithExt = pathWithoutHostAndQuery.startsWith('/ext/');
+          const startsWithCustom = pathWithoutHostAndQuery.startsWith('/bdsap/'); // 添加的额外过滤条件
+          const isCommonPath = pathWithoutHostAndQuery === '/api/commom/getServerTime'; // 添加过滤条件
+          const isUserinfo = pathWithoutHostAndQuery === '/api/user/info'; // 添加过滤条件
+          const getInterfaceConfig = pathWithoutHostAndQuery === '/api/commonConfig/getInterfaceConfig'; // 添加过滤条件
+          const watermarking = pathWithoutHostAndQuery === '/api/loginsetting/watermarking'; // 添加过滤条件
+          const downloadFile = pathWithoutHostAndQuery === '/api/alert/downloadFile'; // 添加过滤条件
+
+
+          if (!isFile && !startsWithExt&& !startsWithCustom && !isCommonPath && !isUserinfo && !getInterfaceConfig && !watermarking && !downloadFile) {
             // 将处理后的路径添加到集合中
             uniquePaths.add(pathWithoutHostAndQuery);
           }
         } 
 
       });
-      renderPaths(uniquePaths);
-      // 显示处理后的路径
+      
+      // 当按钮点击时调用 sendRequest 函数发送接口请求
+      const button = panelWindow.document.querySelector('button');
+      const apiUrl = 'http://10.50.2.202:10082/api/interface/add_redis_Interface';
+      button.addEventListener('click', () => {
+        sendRequest(apiUrl, Array.from(uniquePaths), panelWindow);
+      });
 
+    // 显示处理后的路径
+    renderPaths(uniquePaths);
 
-    });
     function renderPaths(paths) {
 
       const uniquePaths = new Set(paths);
@@ -91,5 +105,41 @@ chrome.devtools.panels.create("Network Paths", "path/to/panel-icon.png", "my-dev
       });
     
     }
+    function sendRequest(url, paths, panelWindow) {
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ paths: paths })
+      })
+      .then(response => response.json())
+      .then(data => {
+        const rightContent = panelWindow.document.getElementById('right');
+        rightContent.innerHTML = ''; // 清空旧内容
+        document.addEventListener('DOMContentLoaded', function() {
+          hljs.initHighlighting();
+        });
+        // 创建入参显示元素
+        const inputElement = document.createElement('pre');
+        inputElement.textContent = 'Input paths: ' + JSON.stringify(paths, null, 2);
+        inputElement.className = 'json-data';
+        hljs.highlightBlock(inputElement);
+
+        // 创建结果显示元素
+        const resultElement = document.createElement('pre');
+        resultElement.textContent = 'Result: ' + JSON.stringify(data, null, 2);
+        resultElement.className = 'json-data';
+        hljs.highlightBlock(resultElement);
+
+        // 将入参和结果元素添加到右侧面板
+        rightContent.appendChild(inputElement);
+        rightContent.appendChild(resultElement);
+          })
+      .catch(error => {
+        console.error('接口请求错误:', error);
+      });
+    }
+  });    
   });
 });

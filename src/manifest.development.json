@@ -5,6 +5,10 @@
     "version": "0.0.1",
     "incognito":"split",
     "devtools_page": "devtools.html",
+    "icons": {
+        "16": "icons/ssh16.png",
+        "48": "icons/ssh48.png"
+    },
     "permissions": [
         "storage",
         "activeTab",

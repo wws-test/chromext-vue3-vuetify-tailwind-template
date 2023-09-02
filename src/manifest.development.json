@@ -20,7 +20,8 @@
         "cookies",
         "webRequest",
         "declarativeNetRequest", 
-        "declarativeNetRequestWithHostAccess"
+        "declarativeNetRequestWithHostAccess",
+        "notifications"
       ],
     "action": {
         "default_popup": "popup.html"

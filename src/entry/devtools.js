@@ -8,6 +8,23 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
   panel.onShown.addListener(function(panelWindow) {
     // 获取网络请求列表
     chrome.devtools.network.getHAR(function(result) {
+      result.entries.forEach(function(entry) {
+        var response = entry.response;
+        if (response && response.content.mimeType === 'application/json') {
+          var responseData = JSON.parse(response.content.text);
+          if (responseData.code !== 0) {
+            // 调用chrome的通知API展示全部的response
+            chrome.notifications.create({
+              type: 'basic',
+              title: 'Response Code',
+              message: response.content.text,
+              iconUrl: 'icon.png'
+            });
+          }
+        }
+      });
+    });
+    chrome.devtools.network.getHAR(function(result) {
       const entries = result.entries;
 
       // 用 Set 进行路径去重

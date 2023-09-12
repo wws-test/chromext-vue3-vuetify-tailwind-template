@@ -6,24 +6,7 @@
 chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.html", function(panel) {
   // 面板初始化逻辑
   panel.onShown.addListener(function(panelWindow) {
-    // 获取网络请求列表
-    chrome.devtools.network.getHAR(function(result) {
-      result.entries.forEach(function(entry) {
-        var response = entry.response;
-        if (response && response.content.mimeType === 'application/json') {
-          var responseData = JSON.parse(response.content.text);
-          if (responseData.code !== 0) {
-            // 调用chrome的通知API展示全部的response
-            chrome.notifications.create({
-              type: 'basic',
-              title: 'Response Code',
-              message: response.content.text,
-              iconUrl: 'icon.png'
-            });
-          }
-        }
-      });
-    });
+    
     chrome.devtools.network.getHAR(function(result) {
       const entries = result.entries;
 
@@ -164,6 +147,47 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
     }
     
   });    
+    chrome.devtools.network.getHAR(function(result) {
+      var responses = []; // 存储response的数组
+      try {
+        if (result && result.entries) {
+          for (var i = 0; i < result.entries.length; i++) {
+            var entry = result.entries[i];
+            var response = entry.response;
+            if (response && response.content.mimeType === 'application/json') {
+              responses.push(response); // 将response存入数组中
+            }
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    
+      // 在获取到全部response后进行处理
+      for (var j = 0; j < responses.length; j++) {
+        var response = responses[j];
+        if (response.content.text) {
+          try {
+            var responseData = JSON.parse(response.content.text);
+            if (responseData.code == 0) {
+              showNotification(response.content.text);
+            }
+          } catch (error) {
+            console.error('Invalid JSON:', error);
+          }
+        }
+      }
+
+      function showNotification(text) {
+        chrome.notifications.create({
+          type: 'basic',
+          title: 'Response Code',
+          message: text,
+          iconUrl: 'icon.png'
+        });
+      }
+
+    });
   });
 });
 

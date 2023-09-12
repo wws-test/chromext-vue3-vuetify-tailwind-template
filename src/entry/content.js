@@ -5,7 +5,7 @@ console.log('content.js');
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-async function autoFillForm(username) {
+async function autoFillForm(username,url) {
   console.log("调用autoFillForm函数");
   // 创建 Mutation Observer 实例
   const observer = new MutationObserver((mutationsList, observer) => {
@@ -41,6 +41,11 @@ async function autoFillForm(username) {
         } else {
           console.log('未找到登录按钮');
         }
+        if (username!=='useradmin'){
+          setTimeout(() => {
+            window.location.href = url+'/home/ailpha/#/operation/workbench'; 
+          }, 2000);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -60,7 +65,7 @@ function handleContentMessage(message, sender, sendResponse) {
   console.log('handleContentMessage');
   if (message.action === 'executeDOMOperation') {
     console.log('content开始执行 DOM 操作'+message.action);
-    autoFillForm(message.quote);
+    autoFillForm(message.quote,message.url);
   }
 }
 

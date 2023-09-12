@@ -31,7 +31,7 @@ function openNewTabInIncognito(url, value) {
           if (tabId === tab.id && changeInfo.status === 'complete') {
             chrome.tabs.onUpdated.removeListener(onUpdatedListener); // 移除监听器
             // 发送消息给内容脚本
-            chrome.tabs.sendMessage(tabId, { action: 'executeDOMOperation', quote: value });
+            chrome.tabs.sendMessage(tabId, { action: 'executeDOMOperation', url: url,quote: value });
           }
         });
       });

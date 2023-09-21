@@ -43,8 +43,8 @@ async function autoFillForm(username,url) {
         }
         if (username!=='useradmin'){
           setTimeout(() => {
-            window.location.href = url+'/home/ailpha/#/operation/workbench'; 
-          }, 2000);
+            window.location.href = url+'/home/ailpha/#/system/upgrade'; 
+          }, 4000);
         }
       } catch (err) {
         console.error(err);

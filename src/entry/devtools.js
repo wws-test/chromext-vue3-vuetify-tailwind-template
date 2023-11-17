@@ -1,8 +1,34 @@
 /* eslint-disable */
-   // 引入 highlight.js
-   import hljs from 'highlight.js';
-   // 引入 highlight.js 的样式文件
-   import 'highlight.js/styles/default.css';
+// 引入 highlight.js
+import hljs from 'highlight.js';
+import {v4 as uuidv4} from 'uuid';
+// 引入 highlight.js 的样式文件
+import 'highlight.js/styles/default.css';
+
+const crypto = require('crypto');
+const CryptoJS = require('crypto-js');
+require('crypto-js/aes');
+
+function aesEncrypt(text, secretKey, iv) {
+  const encrypted = CryptoJS.AES.encrypt(text, secretKey, { iv: iv });
+  return encrypted.toString();
+}
+function setHeaders(s, accessKey, secretKey) {
+  const timeStamp = new Date().getTime();
+  const combox_key = accessKey + '|' + uuidv4() + '|' + timeStamp;
+  const signature = aesEncrypt(combox_key, secretKey, accessKey);
+  console.log(signature);
+  const header = {
+    'Content-Type': 'application/json',
+    'ACCEPT': 'application/json',
+    'accessKey': accessKey,
+    'signature': signature,
+    'Connection': 'close'
+  };
+  s.headers = Object.assign({}, s.headers, header); // 修改这一行
+  return s;
+}
+
 chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.html", function(panel) {
   // 面板初始化逻辑
   panel.onShown.addListener(function(panelWindow) {
@@ -44,7 +70,7 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
       
       // 当按钮点击时调用 sendRequest 函数发送接口请求
       const button = panelWindow.document.querySelector('button');
-      const apiUrl = 'http://10.50.2.202:10082/api/interface/add_redis_Interface';
+      const apiUrl = 'http://10.50.3.224:8081/project/addRedisInterface';
       button.addEventListener('click', () => {
         sendRequest(apiUrl, Array.from(uniquePaths), panelWindow);
       });
@@ -54,11 +80,11 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
 
 
     function sendRequest(url, paths, panelWindow) {
+      let s = { headers: {} }; // 创建一个空的请求头对象
+      s = setHeaders(s, 'TkA1lh4Mqc4J19Fg', "BWtRQJgZswbGOMi5"); // 设置请求头
       fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: Object.assign({}, s.headers),
         body: JSON.stringify({ paths: paths })
       })
       .then(response => response.json())
@@ -193,22 +219,22 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
 
 
 
-chrome.devtools.panels.create("terminal", "favicon.ico", "my-devtools1.html", function(panel){
-  panel.onShown.addListener(function(panelWindow) {
-    initializePanel(panelWindow);
-  });
-});
-function initializePanel(panelWindow) {
-  chrome.devtools.inspectedWindow.eval("window.location.href", function(result, exceptionInfo) {
-    if (exceptionInfo) {
-      console.error("Error:", exceptionInfo);
-    } else {
-      console.log("Current URL:", result);
-      const url = new URL(result);
-      console.log("Current Host:", url.hostname);
+// chrome.devtools.panels.create("terminal", "favicon.ico", "my-devtools1.html", function(panel){
+//   panel.onShown.addListener(function(panelWindow) {
+//     initializePanel(panelWindow);
+//   });
+// });
+// function initializePanel(panelWindow) {
+//   chrome.devtools.inspectedWindow.eval("window.location.href", function(result, exceptionInfo) {
+//     if (exceptionInfo) {
+//       console.error("Error:", exceptionInfo);
+//     } else {
+//       console.log("Current URL:", result);
+//       const url = new URL(result);
+//       console.log("Current Host:", url.hostname);
 
-      const iframe = panelWindow.document.querySelector("iframe");
-      iframe.src = `http://${url.hostname}:7681`;
-    }
-  });
-}
+//       const iframe = panelWindow.document.querySelector("iframe");
+//       iframe.src = `http://${url.hostname}:7681`;
+//     }
+//   });
+// }

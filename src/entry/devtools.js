@@ -22,16 +22,84 @@ function setHeaders(s, accessKey, secretKey) {
     'Content-Type': 'application/json',
     'ACCEPT': 'application/json',
     'accessKey': accessKey,
-    'signature': signature,
-    'Connection': 'close'
+    'signature': signature
   };
   s.headers = Object.assign({}, s.headers, header); // 修改这一行
   return s;
 }
 
-chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.html", function(panel) {
+async function getValueFromLocalStorage() {
+  try {
+    const result = await new Promise((resolve) => {
+      chrome.storage.local.get('projectid', function (result) {
+        resolve(result.key);
+      });
+    });
+    console.log('Stored value:', result);
+    return result;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function getDataFromIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('myDatabase', 1);
+
+    request.onsuccess = function(event) {
+      const db = event.target.result;
+      const transaction = db.transaction('myObjectStore', 'readonly');
+      const objectStore = transaction.objectStore('myObjectStore');
+
+      const getRequest = objectStore.get('projectid');
+
+      getRequest.onsuccess = function(event) {
+        const data = event.target.result;
+        if (data) {
+          resolve(data);
+        } else {
+          reject(new Error('Value not found in IndexedDB'));
+        }
+      };
+
+      transaction.oncomplete = function(event) {
+        db.close();
+      };
+    };
+
+    request.onerror = function(event) {
+      reject(new Error('Error opening IndexedDB'));
+    };
+  });
+}
+
+  chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.html", function(panel) {
   // 面板初始化逻辑
   panel.onShown.addListener(function(panelWindow) {
+    const request = indexedDB.open('myDatabase', 1);
+
+    request.onupgradeneeded = function(event) {
+      const db = event.target.result;
+      const objectStore = db.createObjectStore('myObjectStore', { keyPath: 'key' });
+    };
+
+    request.onsuccess = function(event) {
+      const db = event.target.result;
+      const transaction = db.transaction('myObjectStore', 'readwrite');
+      const objectStore = transaction.objectStore('myObjectStore');
+
+      const data = { key: 'projectid', value: 'fa6119bb-615b-45c5-82cb-685911c1ff65' };
+      const request = objectStore.put(data);
+
+      request.onsuccess = function(event) {
+        console.log('Value is set in IndexedDB');
+      };
+
+      transaction.oncomplete = function(event) {
+        db.close();
+      };
+    };
     
     chrome.devtools.network.getHAR(function(result) {
       const entries = result.entries;
@@ -70,7 +138,7 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
       
       // 当按钮点击时调用 sendRequest 函数发送接口请求
       const button = panelWindow.document.querySelector('button');
-      const apiUrl = 'http://10.50.3.224:8081/project/addRedisInterface';
+      const apiUrl = 'http://10.50.2.3:8081/project/addRedisInterface';
       button.addEventListener('click', () => {
         sendRequest(apiUrl, Array.from(uniquePaths), panelWindow);
       });
@@ -81,7 +149,8 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
 
     function sendRequest(url, paths, panelWindow) {
       let s = { headers: {} }; // 创建一个空的请求头对象
-      s = setHeaders(s, 'TkA1lh4Mqc4J19Fg', "BWtRQJgZswbGOMi5"); // 设置请求头
+      s = setHeaders(s, 'KUPXCvnjCna9ANc9', "ptylbHok5nZSGexx"); // 设置请求头
+      console.log(s);
       fetch(url, {
         method: 'POST',
         headers: Object.assign({}, s.headers),
@@ -133,37 +202,54 @@ chrome.devtools.panels.create("Network Paths", "icons/ssh16.png", "my-devtools.h
         p.textContent = path;
         p.style.paddingBottom  = '10px'; // 设置下边距
         p.style.cursor = 'pointer'; // 设置鼠标为手形
-        // p.style.backgroundColor = '#007bff'; // 设置背景颜色
         p.style.color = 'blue'; // 设置文本颜色
         p.style.padding = '0.5rem 1rem'; // 设置内边距
         p.style.borderRadius = '4px'; // 设置边框圆角
         p.addEventListener('click', function() {
-          const searchKey = encodeURIComponent(path); // 对路径进行编码作为参数
-          const apiUrl = `http://10.50.2.202:10082/api/IAT/queryCaseInfo1?search_key=${searchKey}&project_id=38`;
-        
-          // 调用后端接口
-          fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-              const rightContent = panelWindow.document.getElementById('right');
-              rightContent.innerHTML = ''; // 清空旧内容
-              document.addEventListener('DOMContentLoaded', function() {
-                hljs.initHighlighting();
-              });
-              // 创建结果显示元素
-              const resultElement = document.createElement('pre');
-              // 递归函数，用于提取嵌套层级的 name 字段
-              resultElement.textContent = JSON.stringify(data, null, 2);
-              // 设置样式类名，以便应用合适的样式
-              resultElement.className = 'json-data';
-              hljs.highlightBlock(resultElement);
+          const searchKey = encodeURIComponent(path);
+          // 对路径进行编码作为参数
+          getDataFromIndexedDB()
+              .then(data => {
+                console.log('Data retrieved from IndexedDB:', data);
+                const value = data;
+                // 在这里处理数据
+              })
 
-              rightContent.appendChild(resultElement);
-            })
-            .catch(error => {
-              // 处理请求错误
-              console.error(error);
-            });
+          let s = { headers: {} }; // 创建一个空的请求头对象
+          s = setHeaders(s, 'KUPXCvnjCna9ANc9', "ptylbHok5nZSGexx"); // 设置请求头
+          const requestBody = {
+            name: searchKey,
+            projectId: value
+          };
+          const apiUrl = `http://10.50.2.3:8081/api/definition/queryCaseInfo1`;
+
+          // 调用后端接口
+          fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify(requestBody),
+            headers: Object.assign({}, s.headers),
+          })
+              .then(response => response.json())
+              .then(data => {
+                const rightContent = panelWindow.document.getElementById('right');
+                rightContent.innerHTML = ''; // 清空旧内容
+                document.addEventListener('DOMContentLoaded', function () {
+                  hljs.initHighlighting();
+                });
+                // 创建结果显示元素
+                const resultElement = document.createElement('pre');
+                // 递归函数，用于提取嵌套层级的 name 字段
+                resultElement.textContent = JSON.stringify(data, null, 2);
+                // 设置样式类名，以便应用合适的样式
+                resultElement.className = 'json-data';
+                hljs.highlightBlock(resultElement);
+
+                rightContent.appendChild(resultElement);
+              })
+              .catch(error => {
+                // 处理请求错误
+                console.error(error);
+              });
         });
 
         requestList.appendChild(p);

@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "multiple_roles",
+    "name": "testerDevtools",
     "description": "chrome extension",
     "version": "0.0.1",
     "incognito":"split",
